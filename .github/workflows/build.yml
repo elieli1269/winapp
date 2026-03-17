@@ -1,0 +1,172 @@
+name: MoodSync Browser — Build
+
+on:
+  push:
+    branches: [main]
+    tags:    ["v*"]
+  workflow_dispatch:
+
+jobs:
+  # ── Linux ──────────────────────────────────────────────────────────────────
+  build-linux:
+    name: Build Linux
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Dépendances système (Qt/WebEngine)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            libglib2.0-0 libgl1 libdbus-1-3 libnss3 \
+            libxcomposite1 libxdamage1 libxrandr2 libxss1 \
+            libxtst6 libasound2 libatk1.0-0 libcups2 \
+            libpango-1.0-0 libpangocairo-1.0-0 \
+            libxcb-cursor0 libxkbcommon0 \
+            xvfb
+
+      - name: Pip — PyInstaller + dépendances
+        run: |
+          pip install --upgrade pip
+          pip install PyQt6 PyQt6-WebEngine pyinstaller
+
+      - name: PyInstaller Linux
+        run: |
+          pyinstaller \
+            --onefile \
+            --name "MoodSync-Browser" \
+            --add-data "$(python -c 'import PyQt6; import os; print(os.path.dirname(PyQt6.__file__))')/Qt6/resources:PyQt6/Qt6/resources" \
+            --hidden-import PyQt6.QtWebEngineWidgets \
+            --hidden-import PyQt6.QtWebEngineCore \
+            --hidden-import PyQt6.QtWebChannel \
+            --collect-all PyQt6 \
+            moodsync_browser.py
+
+      - name: Upload artifact Linux
+        uses: actions/upload-artifact@v4
+        with:
+          name: MoodSync-Browser-linux
+          path: dist/MoodSync-Browser
+
+  # ── Windows ────────────────────────────────────────────────────────────────
+  build-windows:
+    name: Build Windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Pip — PyInstaller + dépendances
+        run: |
+          pip install --upgrade pip
+          pip install PyQt6 PyQt6-WebEngine pyinstaller
+
+      - name: PyInstaller Windows
+        run: |
+          pyinstaller `
+            --onefile `
+            --windowed `
+            --name "MoodSync-Browser" `
+            --hidden-import PyQt6.QtWebEngineWidgets `
+            --hidden-import PyQt6.QtWebEngineCore `
+            --hidden-import PyQt6.QtWebChannel `
+            --collect-all PyQt6 `
+            moodsync_browser.py
+
+      - name: Upload artifact Windows
+        uses: actions/upload-artifact@v4
+        with:
+          name: MoodSync-Browser-windows
+          path: dist\MoodSync-Browser.exe
+
+  # ── macOS ──────────────────────────────────────────────────────────────────
+  build-macos:
+    name: Build macOS
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Pip — PyInstaller + dépendances
+        run: |
+          pip install --upgrade pip
+          pip install PyQt6 PyQt6-WebEngine pyinstaller
+
+      - name: PyInstaller macOS
+        run: |
+          pyinstaller \
+            --onefile \
+            --windowed \
+            --name "MoodSync-Browser" \
+            --hidden-import PyQt6.QtWebEngineWidgets \
+            --hidden-import PyQt6.QtWebEngineCore \
+            --hidden-import PyQt6.QtWebChannel \
+            --collect-all PyQt6 \
+            moodsync_browser.py
+
+      - name: Upload artifact macOS
+        uses: actions/upload-artifact@v4
+        with:
+          name: MoodSync-Browser-macos
+          path: dist/MoodSync-Browser
+
+  # ── Release GitHub (sur tag v*) ────────────────────────────────────────────
+  release:
+    name: Créer la Release
+    needs: [build-linux, build-windows, build-macos]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+    steps:
+      - name: Télécharger tous les artefacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Renommer les binaires
+        run: |
+          mv artifacts/MoodSync-Browser-linux/MoodSync-Browser   artifacts/MoodSync-Browser-linux.bin
+          mv artifacts/MoodSync-Browser-windows/MoodSync-Browser.exe artifacts/MoodSync-Browser-windows.exe
+          mv artifacts/MoodSync-Browser-macos/MoodSync-Browser   artifacts/MoodSync-Browser-macos.bin
+
+      - name: GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "MoodSync Browser ${{ github.ref_name }}"
+          body: |
+            ## 🎵 MoodSync Browser ${{ github.ref_name }}
+
+            Navigateur desktop dédié à MoodSync — basé sur PyQt6 + QtWebEngine.
+
+            ### Téléchargements
+            | Plateforme | Fichier |
+            |---|---|
+            | 🐧 Linux   | `MoodSync-Browser-linux.bin` |
+            | 🪟 Windows | `MoodSync-Browser-windows.exe` |
+            | 🍎 macOS   | `MoodSync-Browser-macos.bin` |
+
+            ### Utilisation Linux/macOS
+            ```bash
+            chmod +x MoodSync-Browser-*.bin
+            ./MoodSync-Browser-*.bin
+            ```
+          files: |
+            artifacts/MoodSync-Browser-linux.bin
+            artifacts/MoodSync-Browser-windows.exe
+            artifacts/MoodSync-Browser-macos.bin
+          draft: false
+          prerelease: false
