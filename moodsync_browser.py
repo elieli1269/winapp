@@ -261,7 +261,8 @@ class AccountDialog(QDialog):
         lp.addWidget(self.cb_remember)
 
         self.err_lbl = QLabel("")
-        self.err_lbl.setStyleSheet(f"color:{C['danger']}; font-size:12px; border:none; background:transparent;")
+        self.err_lbl.setStyleSheet(
+            f"color:{C['danger']}; font-size:12px; border:none; background:transparent;")
         self.err_lbl.hide()
         lp.addWidget(self.err_lbl)
 
@@ -269,14 +270,14 @@ class AccountDialog(QDialog):
         btn_login.clicked.connect(self._do_login)
         lp.addWidget(btn_login)
 
-        # Séparateur
         sep_row = QHBoxLayout()
         sl = QFrame(); sl.setFrameShape(QFrame.Shape.HLine)
         sl.setStyleSheet(f"color:{C['border']}; border:none; max-height:1px; background:{C['border']};")
         sr = QFrame(); sr.setFrameShape(QFrame.Shape.HLine)
         sr.setStyleSheet(f"color:{C['border']}; border:none; max-height:1px; background:{C['border']};")
         sl_lbl = QLabel("ou")
-        sl_lbl.setStyleSheet(f"color:{C['text_dimmer']}; font-size:11px; border:none; background:transparent;")
+        sl_lbl.setStyleSheet(
+            f"color:{C['text_dimmer']}; font-size:11px; border:none; background:transparent;")
         sep_row.addWidget(sl, 1)
         sep_row.addWidget(sl_lbl)
         sep_row.addWidget(sr, 1)
@@ -295,7 +296,6 @@ class AccountDialog(QDialog):
         pp.setContentsMargins(0, 0, 0, 0)
         pp.setSpacing(12)
 
-        # Avatar
         av_row = QHBoxLayout()
         av_row.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.avatar_lbl = QLabel("?")
@@ -313,12 +313,14 @@ class AccountDialog(QDialog):
         self.uname_lbl = QLabel("Utilisateur")
         self.uname_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.uname_lbl.setFont(QFont("", 14, QFont.Weight.Bold))
-        self.uname_lbl.setStyleSheet(f"color:{C['text']}; border:none; background:transparent;")
+        self.uname_lbl.setStyleSheet(
+            f"color:{C['text']}; border:none; background:transparent;")
         pp.addWidget(self.uname_lbl)
 
         st = QLabel("✅ Connecté à MoodSync")
         st.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        st.setStyleSheet(f"color:{C['success']}; font-size:12px; border:none; background:transparent;")
+        st.setStyleSheet(
+            f"color:{C['success']}; font-size:12px; border:none; background:transparent;")
         pp.addWidget(st)
 
         btn_profile = self._primary("Voir mon profil")
@@ -397,7 +399,6 @@ class AccountDialog(QDialog):
             p.new_tab(PROFILE_URL)
         self.accept()
 
-    # Drag
     def mousePressEvent(self, e):
         if e.button() == Qt.MouseButton.LeftButton:
             self._dp = e.globalPosition().toPoint() - self.frameGeometry().topLeft()
@@ -440,7 +441,10 @@ class TabPage(QWidget):
 
         self.view.loadStarted.connect(lambda: self.prog.setVisible(True))
         self.view.loadProgress.connect(self.prog.setValue)
-        self.view.loadFinished.connect(lambda ok: (self.prog.setVisible(False), win.update_nav_state()))
+        self.view.loadFinished.connect(lambda ok: (
+            self.prog.setVisible(False),
+            win.update_nav_state()
+        ))
         self.view.titleChanged.connect(self._on_title)
         self.view.urlChanged.connect(self._on_url)
         self.view.load(QUrl(url))
@@ -469,7 +473,6 @@ class MoodSyncBrowser(QMainWindow):
         self.setMinimumSize(900, 600)
         self._muted = False
 
-        # Profil persistant
         self.profile = QWebEngineProfile("MoodSync", self)
         self.profile.setPersistentStoragePath(str(DATA_DIR / "storage"))
         self.profile.setCachePath(str(DATA_DIR / "cache"))
@@ -495,6 +498,11 @@ class MoodSyncBrowser(QMainWindow):
         vbox.setContentsMargins(0, 0, 0, 0)
         vbox.setSpacing(0)
 
+        # ── IMPORTANT : _sb_lbl créé EN PREMIER ──────────────────────────────
+        # _refresh_acc_btn() l'utilise, donc il doit exister avant l'appel
+        self._sb_lbl = QLabel("● MoodSync Browser")
+        self._sb_lbl.setStyleSheet(f"color:{C['text_dimmer']}; font-size:11px;")
+
         # ── Toolbar ──────────────────────────────────────────────────────────
         toolbar = QWidget()
         toolbar.setFixedHeight(50)
@@ -507,15 +515,17 @@ class MoodSyncBrowser(QMainWindow):
         self.btn_back    = self._nbtn("←", "Précédent (Alt+←)")
         self.btn_forward = self._nbtn("→", "Suivant (Alt+→)")
         self.btn_reload  = self._nbtn("⟳", "Recharger (F5)")
-        self.btn_back.clicked.connect(lambda: self.current_tab() and self.current_tab().view.back())
-        self.btn_forward.clicked.connect(lambda: self.current_tab() and self.current_tab().view.forward())
+        self.btn_back.clicked.connect(
+            lambda: self.current_tab() and self.current_tab().view.back())
+        self.btn_forward.clicked.connect(
+            lambda: self.current_tab() and self.current_tab().view.forward())
         self.btn_reload.clicked.connect(self._reload)
         for b in (self.btn_back, self.btn_forward, self.btn_reload):
             tl.addWidget(b)
 
         tl.addSpacing(4)
 
-        # URL bar wrapper
+        # URL bar
         url_wrap = QWidget()
         url_wrap.setStyleSheet("background:transparent;")
         ul = QHBoxLayout(url_wrap)
@@ -525,7 +535,8 @@ class MoodSyncBrowser(QMainWindow):
         self.lock_lbl = QLabel("🔒")
         self.lock_lbl.setFixedWidth(30)
         self.lock_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.lock_lbl.setStyleSheet(f"color:{C['success']}; font-size:12px; background:transparent;")
+        self.lock_lbl.setStyleSheet(
+            f"color:{C['success']}; font-size:12px; background:transparent;")
 
         self.urlbar = QLineEdit()
         self.urlbar.setPlaceholderText("Rechercher ou entrer une adresse")
@@ -548,7 +559,6 @@ class MoodSyncBrowser(QMainWindow):
 
         tl.addSpacing(4)
 
-        # Boutons droite
         btn_home = self._nbtn("⌂", "Accueil MoodSync")
         btn_home.clicked.connect(lambda: self.current_tab() and
             self.current_tab().view.load(QUrl(HOME_URL)))
@@ -556,18 +566,17 @@ class MoodSyncBrowser(QMainWindow):
         btn_links = self._nbtn("⊕", "Liens rapides MoodSync")
         btn_links.clicked.connect(self._quick_links)
 
-        btn_more = self._nbtn("⋮", "Paramètres et plus")
-        btn_more.clicked.connect(self._more_menu)
-        self._btn_more = btn_more
+        self._btn_more = self._nbtn("⋮", "Paramètres et plus")
+        self._btn_more.clicked.connect(self._more_menu)
 
-        # Bouton compte
+        # Bouton compte — _sb_lbl existe déjà, _refresh_acc_btn est safe
         self.acc_btn = QPushButton("👤")
         self.acc_btn.setFixedSize(32, 32)
         self.acc_btn.setToolTip("Compte MoodSync")
         self.acc_btn.clicked.connect(self._show_account)
         self._refresh_acc_btn()
 
-        for b in (btn_home, btn_links, btn_more):
+        for b in (btn_home, btn_links, self._btn_more):
             tl.addWidget(b)
         tl.addSpacing(2)
         tl.addWidget(self.acc_btn)
@@ -599,9 +608,7 @@ class MoodSyncBrowser(QMainWindow):
         sb = QStatusBar()
         self.setStatusBar(sb)
         sb.setFixedHeight(22)
-        self._sb_lbl = QLabel("● MoodSync Browser")
-        self._sb_lbl.setStyleSheet(f"color:{C['text_dimmer']}; font-size:11px;")
-        sb.addPermanentWidget(self._sb_lbl)
+        sb.addPermanentWidget(self._sb_lbl)  # déjà créé plus haut
 
     def _nbtn(self, icon, tip):
         b = QPushButton(icon)
@@ -642,9 +649,12 @@ class MoodSyncBrowser(QMainWindow):
     def _navigate(self):
         text = self.urlbar.text().strip()
         if not text: return
-        if re.match(r'^https?://', text):   url = text
-        elif "." in text and " " not in text: url = "https://" + text
-        else: url = f"https://www.google.com/search?q={text}"
+        if re.match(r'^https?://', text):
+            url = text
+        elif "." in text and " " not in text:
+            url = "https://" + text
+        else:
+            url = f"https://www.google.com/search?q={text}"
         if t := self.current_tab():
             t.view.load(QUrl(url))
 
@@ -660,10 +670,12 @@ class MoodSyncBrowser(QMainWindow):
     def _update_lock(self, url):
         if url.startswith("https://"):
             self.lock_lbl.setText("🔒")
-            self.lock_lbl.setStyleSheet(f"color:{C['success']}; font-size:12px; background:transparent;")
+            self.lock_lbl.setStyleSheet(
+                f"color:{C['success']}; font-size:12px; background:transparent;")
         elif url.startswith("http://"):
             self.lock_lbl.setText("⚠")
-            self.lock_lbl.setStyleSheet(f"color:{C['warning']}; font-size:13px; background:transparent;")
+            self.lock_lbl.setStyleSheet(
+                f"color:{C['warning']}; font-size:13px; background:transparent;")
         else:
             self.lock_lbl.setText("")
 
@@ -714,7 +726,6 @@ class MoodSyncBrowser(QMainWindow):
         self._refresh_acc_btn()
 
     def _autofill_login(self, user, pwd):
-        """Ouvre login.php et injecte les credentials via JS."""
         def inject(ok):
             if not ok: return
             js = f"""
@@ -750,11 +761,11 @@ class MoodSyncBrowser(QMainWindow):
         btn = self.sender()
         m = QMenu(self)
         links = [
-            ("🏠 Accueil",        HOME_URL),
-            ("💬 Messages",       HOME_URL + "/chat.php"),
-            ("🔔 Notifications",  HOME_URL + "/notifications.php"),
-            ("🎨 Studio",         HOME_URL + "/studio.php"),
-            ("👤 Profil",         PROFILE_URL),
+            ("🏠 Accueil",       HOME_URL),
+            ("💬 Messages",      HOME_URL + "/chat.php"),
+            ("🔔 Notifications", HOME_URL + "/notifications.php"),
+            ("🎨 Studio",        HOME_URL + "/studio.php"),
+            ("👤 Profil",        PROFILE_URL),
         ]
         for label, url in links:
             m.addAction(label, lambda u=url: self.new_tab(u))
@@ -762,17 +773,17 @@ class MoodSyncBrowser(QMainWindow):
 
     def _more_menu(self):
         m = QMenu(self)
-        m.addAction("➕  Nouvel onglet",         lambda: self.new_tab(HOME_URL))
+        m.addAction("➕  Nouvel onglet",          lambda: self.new_tab(HOME_URL))
         m.addSeparator()
-        m.addAction("🔍  Zoom +",               lambda: self._zoom(1.1))
-        m.addAction("🔍  Zoom −",               lambda: self._zoom(0.9))
-        m.addAction("🔍  100%",                 self._zoom_reset)
+        m.addAction("🔍  Zoom +",                lambda: self._zoom(1.1))
+        m.addAction("🔍  Zoom −",                lambda: self._zoom(0.9))
+        m.addAction("🔍  100%",                  self._zoom_reset)
         m.addSeparator()
-        m.addAction("🔇  Couper/activer son",   self._toggle_mute)
-        m.addAction("🛠  Outils dev  (F12)",    self._devtools)
-        m.addAction("📄  Source page  (Ctrl+U)",self._view_source)
+        m.addAction("🔇  Couper/activer son",    self._toggle_mute)
+        m.addAction("🛠  Outils dev  (F12)",     self._devtools)
+        m.addAction("📄  Source page  (Ctrl+U)", self._view_source)
         m.addSeparator()
-        m.addAction("🚪  Quitter",              self.close)
+        m.addAction("🚪  Quitter",               self.close)
         m.exec(self._btn_more.mapToGlobal(
             QPoint(0, self._btn_more.height() + 4)))
 
@@ -806,27 +817,25 @@ class MoodSyncBrowser(QMainWindow):
 
     def _setup_shortcuts(self):
         sc = lambda key, fn: QShortcut(QKeySequence(key), self, fn)
-        sc("Ctrl+T",          lambda: self.new_tab(HOME_URL))
-        sc("Ctrl+W",          lambda: self._close_tab(self.tabs.currentIndex()))
-        sc("Ctrl+L",          lambda: (self.urlbar.setFocus(), self.urlbar.selectAll()))
-        sc("F5",              self._reload)
-        sc("Ctrl+R",          self._reload)
-        sc("F12",             self._devtools)
-        sc("Ctrl+Shift+I",    self._devtools)
-        sc("Ctrl+U",          self._view_source)
-        sc("Alt+Left",        lambda: self.current_tab() and self.current_tab().view.back())
-        sc("Alt+Right",       lambda: self.current_tab() and self.current_tab().view.forward())
-        sc("Ctrl++",          lambda: self._zoom(1.1))
-        sc("Ctrl+=",          lambda: self._zoom(1.1))
-        sc("Ctrl+-",          lambda: self._zoom(0.9))
-        sc("Ctrl+0",          self._zoom_reset)
-        sc("Ctrl+Tab",        lambda: self.tabs.setCurrentIndex(
+        sc("Ctrl+T",         lambda: self.new_tab(HOME_URL))
+        sc("Ctrl+W",         lambda: self._close_tab(self.tabs.currentIndex()))
+        sc("Ctrl+L",         lambda: (self.urlbar.setFocus(), self.urlbar.selectAll()))
+        sc("F5",             self._reload)
+        sc("Ctrl+R",         self._reload)
+        sc("F12",            self._devtools)
+        sc("Ctrl+Shift+I",   self._devtools)
+        sc("Ctrl+U",         self._view_source)
+        sc("Alt+Left",       lambda: self.current_tab() and self.current_tab().view.back())
+        sc("Alt+Right",      lambda: self.current_tab() and self.current_tab().view.forward())
+        sc("Ctrl++",         lambda: self._zoom(1.1))
+        sc("Ctrl+=",         lambda: self._zoom(1.1))
+        sc("Ctrl+-",         lambda: self._zoom(0.9))
+        sc("Ctrl+0",         self._zoom_reset)
+        sc("Ctrl+Tab",       lambda: self.tabs.setCurrentIndex(
             (self.tabs.currentIndex()+1) % self.tabs.count()))
-        sc("Ctrl+Shift+Tab",  lambda: self.tabs.setCurrentIndex(
+        sc("Ctrl+Shift+Tab", lambda: self.tabs.setCurrentIndex(
             (self.tabs.currentIndex()-1) % self.tabs.count()))
-        sc("Escape",          lambda: self.urlbar.clearFocus())
-
-    # ── Drag & Drop ───────────────────────────────────────────────────────────
+        sc("Escape",         lambda: self.urlbar.clearFocus())
 
     def dragEnterEvent(self, e):
         if e.mimeData().hasUrls(): e.accept()
